@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Segoe UI', 'Helvetica Neue', ui-sans-serif, system-ui, sans-serif;
+  --color-surface: #09090b;
+  --color-panel: #18181b;
+  --color-panel-raised: #27272a;
+  --color-border: #3f3f46;
+  --color-muted: #a1a1aa;
+  --color-ink: #fafafa;
+  --color-accent: #34d399;
+  --color-accent-dim: #059669;
+  --color-warn: #f87171;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Prefer visible keyboard focus in dark UI */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
