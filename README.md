@@ -1,13 +1,12 @@
 # Regens Run The World
 
-Standalone desktop web app for tracking a **FIFA 22 Career Mode Youth & Regen Challenge**. Soft-enforces career limits on Skill Moves, Weak Foot, Work Rates, and one extra playable position via status badges (does not hard-block edits).
+Standalone desktop web app for a **FIFA 22 Career Mode Youth & Regen Challenge**. It tracks your academy and senior regens and shows soft status badges for Skill Moves, Weak Foot, Work Rates, and one extra playable position. Badges warn when a rule is used or broken; the app never hard-blocks edits.
 
 ## Stack
 
 - React + TypeScript + Vite
 - Tailwind CSS v4
 - Lucide icons
-- Browser `localStorage` (`rrtw:players:v1`)
 
 ## Run locally
 
@@ -23,25 +22,29 @@ npm test      # Vitest unit tests
 npm run build # production build
 ```
 
-## Tabs
+## How it works
 
-1. **Youth Academy** — scout POT range (min–max); no status yet; promote to senior (status left unset)
-2. **Senior Squad** — status required on add; sell/transfer with club + fee
-3. **External** — Scouted regens | Regens who left (side by side)
+### Tabs (in order)
 
-Click any player row to edit. Upgrade badges update live from initial vs current values.
+1. **Senior Squad** — Add players with a FIFA status. Sell/transfer with destination club and fee. Click a row to edit. Players promoted from the academy arrive with status unset until you set it.
+2. **Youth Academy** — Track scout **POT as a min–max range** (no status yet). Promote to senior, or **Release** to remove a prospect from the app.
+3. **External Regens & Transfers** — Two columns: **Scouted** and **Who Left**. Who Left hides SM / WF / WR columns.
 
-## Challenge rules (badges)
+### Challenge rules (badges)
 
 | Rule | Available | Used | Rule broken |
 |------|-----------|------|-------------|
 | SM/WF (either-or) | neither raised | +1 SM **or** +1 WF | both raised, or either +2+ |
-| SM/WF for **GK** | always free (no limit) | — | — |
-| Work rate | same as initial | any change | — |
-| Position | no extras beyond starting set | +1 new playable position | +2 or more |
+| Goalkeepers | upgrades n/a (SM/WF, WR, position) | — | — |
+| Work rate | 0 steps from baseline | +1 L→M→H step total (Att + Def) | ≥2 steps, or any side decreased |
+| Position | no extras beyond starting playable set | +1 new playable position | +2 or more |
 
-Academy stores POT as a range only. After promote/signing, pick one of the four FIFA statuses manually.
+Starting SM, WF, WR, and playable positions are frozen as the challenge baseline. Current values are compared to that baseline for badges.
 
-## Data
+Academy keeps POT as a range only. After promote or when adding a senior/external player, pick one of the four FIFA statuses manually (not derived from the range).
 
-Fresh installs seed **one** Youth Academy example player so the table layout is clear. Add the rest from your career save. Persists under `rrtw:players:v3`.
+### Day to day
+
+- Changes save automatically in this browser.
+- Use **Export backup** / **Import backup** in the header to move a save between machines (import replaces the whole roster after confirm).
+- Tips: hover **+** on OVR / SM / WF to bump; click POT to edit inline; in Edit, use **Edit baseline** if a frozen init value was logged wrong.
