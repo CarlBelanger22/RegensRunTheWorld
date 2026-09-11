@@ -21,6 +21,12 @@ function rank(side: string): number {
   return RANK[side] ?? -1
 }
 
+/** True when both Att and Def are already High (no legal WR upgrade left). */
+export function isWorkRateMaxed(value: string): boolean {
+  const parts = parseWorkRate(value)
+  return parts != null && parts.attack === 'H' && parts.defense === 'H'
+}
+
 /**
  * Total upward steps from baseline → current (attack + defense).
  * Decreases on either side count as broken-level (return a high sentinel via negative?);

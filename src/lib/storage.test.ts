@@ -2,6 +2,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createPlayer, promoteToSenior, sellPlayer, correctFrozenBaseline, touchPlayer } from './players'
 import { createSeedPlayers } from './seed'
 import {
+  createAcademyAddonPlayers,
+  mergeMissingAcademyAddons,
+} from './academyAddons'
+import {
+  createSeniorAddonPlayers,
+  mergeMissingSeniorAddons,
+} from './seniorAddons'
+import {
   STORAGE_KEY,
   clearPlayersStorage,
   loadPlayers,
@@ -165,5 +173,41 @@ describe('storage', () => {
     const second = loadPlayers()
     expect(second).toHaveLength(1)
     expect(second[0]?.name).toBe('Solo')
+  })
+
+  it('merges missing screenshot seniors into an existing career save', () => {
+    const base = createSeedPlayers().filter((p) => p.squadLocation === 'senior')
+    expect(base.some((p) => p.name === 'Matěj Liška')).toBe(true)
+    savePlayers(base)
+
+    const loaded = loadPlayers()
+    const addons = createSeniorAddonPlayers()
+    for (const addon of addons) {
+      expect(loaded.some((p) => p.name === addon.name)).toBe(true)
+    }
+    expect(loaded.filter((p) => p.squadLocation === 'senior').length).toBe(
+      base.length + addons.length,
+    )
+  })
+})
+
+describe('seniorAddons', () => {
+  it('does not duplicate names already present', () => {
+    const first = createSeniorAddonPlayers()
+    const merged = mergeMissingSeniorAddons([
+      ...createSeedPlayers().filter((p) => p.name === 'Matěj Liška'),
+      ...first,
+    ])
+    expect(merged.filter((p) => p.name === 'Ager Correa')).toHaveLength(1)
+  })
+})
+
+describe('academyAddons', () => {
+  it('merges Austin Ashworth into a career YA save', () => {
+    const base = createSeedPlayers().filter((p) => p.name === 'Jack Rogerson')
+    const merged = mergeMissingAcademyAddons(base)
+    expect(merged.some((p) => p.name === 'Austin Ashworth')).toBe(true)
+    expect(createAcademyAddonPlayers()[0]?.squadLocation).toBe('academy')
+    expect(createAcademyAddonPlayers()[0]?.potRange).toBe('82-94')
   })
 })

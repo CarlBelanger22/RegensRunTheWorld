@@ -94,6 +94,20 @@ describe('getUpgradeStatus', () => {
     })
   })
 
+  it('marks WR used/max when baseline is already H/H (cannot upgrade)', () => {
+    expect(
+      getUpgradeStatus(
+        basePlayer({
+          initialWorkRate: 'H/H',
+          currentWorkRate: 'H/H',
+        }),
+      ).wr,
+    ).toEqual({
+      kind: 'used',
+      label: 'WR: Max',
+    })
+  })
+
   it('marks position available / used / broken by extra count', () => {
     const player = basePlayer()
     expect(getUpgradeStatus(player).position.kind).toBe('available')

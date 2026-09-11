@@ -14,6 +14,7 @@ const TITLE: Record<string, string> = {
   'SM/WF: +1 WF': 'SM/WF upgrade used (+1 Weak Foot)',
   'WR: Avail': 'Work rate upgrade available',
   'WR: Used': 'Work rate upgrade used',
+  'WR: Max': 'Work rate already H/H — cannot go higher',
   'Pos: Avail': 'Position change available',
   'Pos: Used': 'Position change used',
 }

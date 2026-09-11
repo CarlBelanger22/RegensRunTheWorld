@@ -1,6 +1,6 @@
 import { countExtraPositions } from './positions'
 import { isGoalkeeper } from './players'
-import { workRateStepDelta } from './workRate'
+import { isWorkRateMaxed, workRateStepDelta } from './workRate'
 import type { Player, UpgradeBadge, UpgradeStatus } from '../types/player'
 
 /**
@@ -44,16 +44,20 @@ function workRateBadge(
   if (steps == null) {
     return { kind: 'broken', label: 'Broken: WR?' }
   }
-  if (steps <= 0) {
-    return { kind: 'available', label: 'WR: Avail' }
+  if (steps >= 2) {
+    return {
+      kind: 'broken',
+      label: `Broken: +${steps} WR`,
+    }
+  }
+  // Already H/H at challenge start — no higher WR exists
+  if (isWorkRateMaxed(initialWorkRate)) {
+    return { kind: 'used', label: 'WR: Max' }
   }
   if (steps === 1) {
     return { kind: 'used', label: 'WR: Used' }
   }
-  return {
-    kind: 'broken',
-    label: `Broken: +${steps} WR`,
-  }
+  return { kind: 'available', label: 'WR: Avail' }
 }
 
 function positionBadge(player: Player): UpgradeBadge {

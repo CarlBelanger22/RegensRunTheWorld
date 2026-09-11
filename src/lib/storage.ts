@@ -1,4 +1,6 @@
 import { createSeedPlayers } from './seed'
+import { mergeMissingAcademyAddons } from './academyAddons'
+import { mergeMissingSeniorAddons } from './seniorAddons'
 import type { Player } from '../types/player'
 
 /** v6: 4 senior + 16 YA from screenshots. */
@@ -96,12 +98,16 @@ export function loadPlayers(): Player[] {
       savePlayers(seed)
       return seed
     }
-    const players = mergeMissingAcademyPlayers(
-      applyDataCorrections(
-        (parsed as Player[]).map((p) => ({
-          ...p,
-          height: typeof p.height === 'string' ? p.height : '',
-        })),
+    const players = mergeMissingSeniorAddons(
+      mergeMissingAcademyAddons(
+        mergeMissingAcademyPlayers(
+          applyDataCorrections(
+            (parsed as Player[]).map((p) => ({
+              ...p,
+              height: typeof p.height === 'string' ? p.height : '',
+            })),
+          ),
+        ),
       ),
     )
     savePlayers(players)

@@ -3,6 +3,7 @@ import {
   parseWorkRate,
   workRateOptionsFromBaseline,
   workRateStepDelta,
+  isWorkRateMaxed,
 } from './workRate'
 
 describe('parseWorkRate', () => {
@@ -25,6 +26,16 @@ describe('workRateStepDelta', () => {
 
   it('treats decreases as broken-level (>=2)', () => {
     expect(workRateStepDelta('H/H', 'M/H')).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('isWorkRateMaxed', () => {
+  it('is true only when both sides are H', () => {
+    expect(isWorkRateMaxed('H/H')).toBe(true)
+    expect(isWorkRateMaxed('h / h')).toBe(true)
+    expect(isWorkRateMaxed('H/M')).toBe(false)
+    expect(isWorkRateMaxed('M/H')).toBe(false)
+    expect(isWorkRateMaxed('bad')).toBe(false)
   })
 })
 
