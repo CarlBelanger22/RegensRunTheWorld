@@ -1,6 +1,12 @@
 import { createSeedPlayers } from './seed'
 import { mergeMissingAcademyAddons } from './academyAddons'
+import {
+  clearReleasedNamesStorage,
+  isNameReleased,
+  omitReleasedPlayers,
+} from './releasedNames'
 import { mergeMissingSeniorAddons } from './seniorAddons'
+import { applyAutoUpgradesSettled } from './upgradeStatus'
 import type { Player } from '../types/player'
 
 /** v6: 4 senior + 16 YA from screenshots. */
@@ -73,7 +79,8 @@ function mergeMissingAcademyPlayers(players: Player[]): Player[] {
     (p) =>
       p.squadLocation === 'academy' &&
       (ACADEMY_ADDONS as readonly string[]).includes(p.name) &&
-      !existing.has(p.name),
+      !existing.has(p.name) &&
+      !isNameReleased(p.name),
   )
   return missing.length === 0 ? players : [...players, ...missing]
 }
@@ -86,7 +93,7 @@ export function loadPlayers(): Player[] {
 
   const raw = storage.getItem(STORAGE_KEY)
   if (!raw) {
-    const seed = createSeedPlayers()
+    const seed = omitReleasedPlayers(createSeedPlayers())
     savePlayers(seed)
     return seed
   }
@@ -94,22 +101,24 @@ export function loadPlayers(): Player[] {
   try {
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) {
-      const seed = createSeedPlayers()
+      const seed = omitReleasedPlayers(createSeedPlayers())
       savePlayers(seed)
       return seed
     }
     const players = mergeMissingSeniorAddons(
       mergeMissingAcademyAddons(
         mergeMissingAcademyPlayers(
-          applyDataCorrections(
-            (parsed as Player[]).map((p) => ({
-              ...p,
-              height: typeof p.height === 'string' ? p.height : '',
-            })),
+          omitReleasedPlayers(
+            applyDataCorrections(
+              (parsed as Player[]).map((p) => ({
+                ...p,
+                height: typeof p.height === 'string' ? p.height : '',
+              })),
+            ),
           ),
         ),
       ),
-    )
+    ).map((p) => applyAutoUpgradesSettled(p))
     savePlayers(players)
     return players
   } catch (error) {
@@ -135,4 +144,5 @@ export function clearPlayersStorage(): void {
   if (!storage) return
   storage.removeItem(STORAGE_KEY)
   purgeLegacyKeys(storage)
+  clearReleasedNamesStorage()
 }

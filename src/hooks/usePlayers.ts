@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { markPlayerReleased } from '../lib/releasedNames'
 import { loadPlayers, savePlayers } from '../lib/storage'
 import type { Player } from '../types/player'
 
@@ -24,7 +25,11 @@ export function usePlayers() {
   }, [])
 
   const removePlayer = useCallback((id: string) => {
-    setPlayers((prev) => prev.filter((p) => p.id !== id))
+    setPlayers((prev) => {
+      const target = prev.find((p) => p.id === id)
+      if (target) markPlayerReleased(target.name)
+      return prev.filter((p) => p.id !== id)
+    })
   }, [])
 
   return { players, setPlayers: replacePlayers, upsertPlayer, removePlayer }

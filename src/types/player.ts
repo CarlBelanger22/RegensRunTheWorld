@@ -82,6 +82,13 @@ export interface Player {
   squadLocation: SquadLocation
   transferFee?: number
   destinationClub?: string
+  /** Set while out on loan; player stays on Senior. */
+  loanClub?: string
+  /**
+   * Player-level: challenge upgrades are done (even if some badges still Avail).
+   * Shown as a left rail on the row — independent of FIFA status tint.
+   */
+  upgradesSettled?: boolean
   notes?: string
   updatedAt: number
 }

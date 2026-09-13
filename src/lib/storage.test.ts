@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createPlayer, promoteToSenior, sellPlayer, correctFrozenBaseline, touchPlayer } from './players'
+import { createPlayer, promoteToSenior, sellPlayer, loanPlayer, recallPlayer, correctFrozenBaseline, touchPlayer } from './players'
 import { createSeedPlayers } from './seed'
 import {
   createAcademyAddonPlayers,
@@ -15,6 +15,7 @@ import {
   loadPlayers,
   savePlayers,
 } from './storage'
+import { markPlayerReleased } from './releasedNames'
 
 describe('seed', () => {
   it('seeds 4 senior + 24 academy players from screenshots', () => {
@@ -129,6 +130,7 @@ describe('players helpers', () => {
         initialWorkRate: 'H/M',
         currentWorkRate: 'H/M',
         squadLocation: 'senior',
+        loanClub: 'Temp FC',
       }),
       'Rival FC',
       8_500_000,
@@ -136,6 +138,73 @@ describe('players helpers', () => {
     expect(sold.squadLocation).toBe('external')
     expect(sold.destinationClub).toBe('Rival FC')
     expect(sold.transferFee).toBe(8_500_000)
+    expect(sold.loanClub).toBe('')
+  })
+
+  it('loanPlayer keeps senior and recall clears club', () => {
+    const base = createPlayer({
+      name: 'Loanee',
+      country: 'Spain',
+      naturalPosition: 'ST',
+      currentPosition: 'ST',
+      secondaryPositions: '',
+      ovr: 68,
+      potRange: '',
+      status: 'Showing Great Potential',
+      source: 'Academy',
+      initialSM: 3,
+      currentSM: 3,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'M/M',
+      currentWorkRate: 'M/M',
+      squadLocation: 'senior',
+    })
+    const loaned = loanPlayer(base, '  Loan United  ')
+    expect(loaned.squadLocation).toBe('senior')
+    expect(loaned.loanClub).toBe('Loan United')
+    expect(recallPlayer(loaned).loanClub).toBe('')
+  })
+
+  it('marks upgradesSettled true for GKs on create', () => {
+    const gk = createPlayer({
+      name: 'Keeper',
+      country: 'Italy',
+      naturalPosition: 'GK',
+      currentPosition: 'GK',
+      secondaryPositions: '',
+      ovr: 60,
+      potRange: '',
+      status: null,
+      source: 'Academy',
+      initialSM: 1,
+      currentSM: 1,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'M/L',
+      currentWorkRate: 'M/L',
+      squadLocation: 'senior',
+    })
+    const outfield = createPlayer({
+      name: 'Out',
+      country: 'Italy',
+      naturalPosition: 'CB',
+      currentPosition: 'CB',
+      secondaryPositions: '',
+      ovr: 60,
+      potRange: '',
+      status: null,
+      source: 'Academy',
+      initialSM: 2,
+      currentSM: 2,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'L/H',
+      currentWorkRate: 'L/H',
+      squadLocation: 'senior',
+    })
+    expect(gk.upgradesSettled).toBe(true)
+    expect(outfield.upgradesSettled).toBe(false)
   })
 })
 
@@ -147,7 +216,9 @@ describe('storage', () => {
 
   it('seeds roster and round-trips saves', () => {
     const first = loadPlayers()
-    expect(first).toHaveLength(28)
+    // Seed has 28; 3 legacy-released names are stripped on load
+    expect(first).toHaveLength(25)
+    expect(first.some((p) => p.name === 'Lucas Corona')).toBe(false)
     expect(localStorage.getItem(STORAGE_KEY)).toBeTruthy()
 
     const player = createPlayer({
@@ -173,6 +244,23 @@ describe('storage', () => {
     const second = loadPlayers()
     expect(second).toHaveLength(1)
     expect(second[0]?.name).toBe('Solo')
+  })
+
+  it('does not re-merge released academy addon names', () => {
+    const base = createSeedPlayers().filter(
+      (p) =>
+        p.name === 'Jack Rogerson' ||
+        p.name === 'Lucas Corona' ||
+        p.name === 'Rafael Pinto',
+    )
+    savePlayers(base)
+    markPlayerReleased('Austin Ashworth')
+
+    const loaded = loadPlayers()
+    expect(loaded.some((p) => p.name === 'Lucas Corona')).toBe(false)
+    expect(loaded.some((p) => p.name === 'Rafael Pinto')).toBe(false)
+    expect(loaded.some((p) => p.name === 'Austin Ashworth')).toBe(false)
+    expect(loaded.some((p) => p.name === 'Jack Rogerson')).toBe(true)
   })
 
   it('merges missing screenshot seniors into an existing career save', () => {
@@ -209,5 +297,19 @@ describe('academyAddons', () => {
     expect(merged.some((p) => p.name === 'Austin Ashworth')).toBe(true)
     expect(createAcademyAddonPlayers()[0]?.squadLocation).toBe('academy')
     expect(createAcademyAddonPlayers()[0]?.potRange).toBe('82-94')
+  })
+
+  it('includes Gordson, Santoro, and Bird', () => {
+    const names = createAcademyAddonPlayers().map((p) => p.name)
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'Steven Gordson',
+        'Marco Santoro',
+        'Lucas Bird',
+      ]),
+    )
+    expect(
+      createAcademyAddonPlayers().find((p) => p.name === 'Lucas Bird')?.potRange,
+    ).toBe('77-94')
   })
 })

@@ -1,5 +1,4 @@
-import { getUpgradeStatus } from '../lib/upgradeStatus'
-import { isGoalkeeper } from '../lib/players'
+import { getUpgradeBadgesView } from '../lib/upgradeStatus'
 import type { Player, UpgradeBadge } from '../types/player'
 
 const KIND_CLASS: Record<UpgradeBadge['kind'], string> = {
@@ -34,7 +33,9 @@ function BadgePill({ badge }: { badge: UpgradeBadge }) {
 }
 
 export function UpgradeBadges({ player }: { player: Player }) {
-  if (isGoalkeeper(player)) {
+  const view = getUpgradeBadgesView(player)
+
+  if (view.mode === 'gk') {
     return (
       <span
         className="text-[10px] text-zinc-500"
@@ -45,12 +46,22 @@ export function UpgradeBadges({ player }: { player: Player }) {
     )
   }
 
-  const status = getUpgradeStatus(player)
+  if (view.mode === 'settled-clean') {
+    return (
+      <span
+        className="text-[10px] text-zinc-500"
+        title="Marked settled — upgrade badges hidden unless a rule is broken"
+      >
+        Settled — upgrades n/a
+      </span>
+    )
+  }
+
   return (
     <div className="flex flex-wrap gap-0.5">
-      <BadgePill badge={status.smWf} />
-      <BadgePill badge={status.wr} />
-      <BadgePill badge={status.position} />
+      {view.badges.map((badge) => (
+        <BadgePill key={badge.label} badge={badge} />
+      ))}
     </div>
   )
 }

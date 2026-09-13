@@ -5,9 +5,11 @@ import { UpgradeBadges } from './UpgradeBadges'
 import { correctFrozenBaseline, touchPlayer } from '../lib/players'
 import {
   buildInitialPlayablePositions,
+  ensureSecondaryIncludesCurrent,
   parsePositions,
 } from '../lib/positions'
 import { parsePotRange } from '../lib/potRange'
+import { applyAutoUpgradesSettled } from '../lib/upgradeStatus'
 import { workRateOptionsFromBaseline } from '../lib/workRate'
 import {
   PLAYER_SOURCES,
@@ -80,13 +82,18 @@ function clampStar(value: number): number {
 }
 
 function previewPlayer(base: Player, form: EditFormState): Player {
-  return {
+  const secondaryPositions = ensureSecondaryIncludesCurrent(
+    form.naturalPosition,
+    form.currentPosition,
+    form.secondaryPositions,
+  )
+  const preview: Player = {
     ...base,
     name: form.name.trim() || base.name,
     country: form.country.trim() || base.country,
     naturalPosition: form.naturalPosition,
     currentPosition: form.currentPosition,
-    secondaryPositions: form.secondaryPositions.trim(),
+    secondaryPositions,
     ovr: Number(form.ovr) || base.ovr,
     height: form.height.trim(),
     potRange: form.potRange.trim(),
@@ -108,6 +115,7 @@ function previewPlayer(base: Player, form: EditFormState): Player {
         : Number(form.transferFee),
     notes: form.notes.trim() || undefined,
   }
+  return applyAutoUpgradesSettled(preview)
 }
 
 /** Remounts form state whenever the edited player changes. */
@@ -159,7 +167,21 @@ function EditPlayerModalInner({
   const isExternal = base.squadLocation === 'external'
 
   const patch = (partial: Partial<EditFormState>) => {
-    setForm((prev) => ({ ...prev, ...partial }))
+    setForm((prev) => {
+      const next = { ...prev, ...partial }
+      if (
+        partial.currentPosition != null ||
+        partial.naturalPosition != null ||
+        partial.secondaryPositions != null
+      ) {
+        next.secondaryPositions = ensureSecondaryIncludesCurrent(
+          next.naturalPosition,
+          next.currentPosition,
+          next.secondaryPositions,
+        )
+      }
+      return next
+    })
     setError(null)
   }
 
@@ -232,7 +254,11 @@ function EditPlayerModalInner({
         country,
         naturalPosition: form.naturalPosition,
         currentPosition: form.currentPosition,
-        secondaryPositions: form.secondaryPositions.trim(),
+        secondaryPositions: ensureSecondaryIncludesCurrent(
+          form.naturalPosition,
+          form.currentPosition,
+          form.secondaryPositions,
+        ),
         ovr,
         height: form.height.trim(),
         potRange,

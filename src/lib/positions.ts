@@ -66,6 +66,26 @@ export function getCurrentPlayablePositions(player: {
   )
 }
 
+/**
+ * If Current is a trained convert (≠ Natural), ensure it appears in Secondaries.
+ * Does not remove codes when Current changes away. Returns trimmed CSV string.
+ */
+export function ensureSecondaryIncludesCurrent(
+  naturalPosition: string,
+  currentPosition: string,
+  secondaryPositions: string,
+): string {
+  const natural = naturalPosition.trim().toUpperCase()
+  const current = currentPosition.trim().toUpperCase()
+  const secondaries = parsePositions(secondaryPositions)
+
+  if (!current || current === natural || secondaries.includes(current)) {
+    return secondaries.join(', ')
+  }
+
+  return [...secondaries, current].join(', ')
+}
+
 /** How many playable positions were added beyond the frozen initial set. */
 export function countExtraPositions(player: {
   naturalPosition: string

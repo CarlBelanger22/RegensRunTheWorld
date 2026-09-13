@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { createPlayer } from './players'
-import { getUpgradeStatus, isSoldAlumni } from './upgradeStatus'
+import {
+  allChallengeSlotsUsed,
+  applyAutoUpgradesSettled,
+  getUpgradeBadgesView,
+  getUpgradeStatus,
+  isSoldAlumni,
+} from './upgradeStatus'
 
 function basePlayer(
   overrides: Partial<ReturnType<typeof createPlayer>> = {},
@@ -167,6 +173,83 @@ describe('isSoldAlumni', () => {
 
     expect(
       isSoldAlumni(basePlayer({ squadLocation: 'external' })),
+    ).toBe(false)
+  })
+})
+
+describe('getUpgradeBadgesView', () => {
+  it('shows settled n/a when settled and nothing broken', () => {
+    expect(
+      getUpgradeBadgesView(basePlayer({ upgradesSettled: true })),
+    ).toEqual({ mode: 'settled-clean' })
+    expect(
+      getUpgradeBadgesView(
+        basePlayer({ upgradesSettled: true, currentSM: 4 }),
+      ),
+    ).toEqual({ mode: 'settled-clean' })
+  })
+
+  it('shows only broken pills when settled but rules broken', () => {
+    const view = getUpgradeBadgesView(
+      basePlayer({ upgradesSettled: true, currentSM: 5 }),
+    )
+    expect(view.mode).toBe('pills')
+    if (view.mode === 'pills') {
+      expect(view.badges.every((b) => b.kind === 'broken')).toBe(true)
+      expect(view.badges.some((b) => b.label.includes('SM'))).toBe(true)
+    }
+  })
+
+  it('keeps GK mode even if upgradesSettled', () => {
+    expect(
+      getUpgradeBadgesView(
+        basePlayer({
+          naturalPosition: 'GK',
+          currentPosition: 'GK',
+          upgradesSettled: true,
+        }),
+      ),
+    ).toEqual({ mode: 'gk' })
+  })
+})
+
+describe('allChallengeSlotsUsed / applyAutoUpgradesSettled', () => {
+  it('auto-settles when SM/WF, WR, and Pos are all used', () => {
+    const player = {
+      ...basePlayer({
+        upgradesSettled: false,
+        currentSM: 4,
+        currentWorkRate: 'H/M',
+      }),
+      // Extra secondary after freeze (createPlayer would bake ST into initial)
+      secondaryPositions: 'CM, ST',
+      initialPlayablePositions: ['CAM', 'CM'],
+    }
+    expect(allChallengeSlotsUsed(player)).toBe(true)
+    expect(applyAutoUpgradesSettled(player).upgradesSettled).toBe(true)
+  })
+
+  it('does not auto-settle while any slot is still available', () => {
+    expect(
+      allChallengeSlotsUsed(
+        basePlayer({ currentSM: 4, currentWorkRate: 'H/M' }),
+      ),
+    ).toBe(false)
+  })
+
+  it('respects explicit upgradesSettled false', () => {
+    const player = {
+      ...basePlayer({
+        upgradesSettled: false,
+        currentSM: 4,
+        currentWorkRate: 'H/M',
+      }),
+      secondaryPositions: 'CM, ST',
+      initialPlayablePositions: ['CAM', 'CM'],
+    }
+    expect(
+      applyAutoUpgradesSettled(player, { upgradesSettledExplicit: true })
+        .upgradesSettled,
     ).toBe(false)
   })
 })

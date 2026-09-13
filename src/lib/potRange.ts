@@ -34,3 +34,10 @@ export function potRangeSortKey(potRange: string): number {
   const bounds = parsePotRange(potRange)
   return bounds ? bounds.max : -1
 }
+
+/** True when scout range width is exactly 6 (e.g. 85–91). */
+export function isPotRangeDiffSix(potRange: string): boolean {
+  const bounds = parsePotRange(potRange)
+  if (!bounds) return false
+  return bounds.max - bounds.min === 6
+}

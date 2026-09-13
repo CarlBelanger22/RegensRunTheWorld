@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parsePotRange, potRangeSortKey } from './potRange'
+import { parsePotRange, potRangeSortKey, isPotRangeDiffSix } from './potRange'
 
 describe('parsePotRange', () => {
   it('parses min-max with hyphen or en-dash', () => {
@@ -22,5 +22,15 @@ describe('potRangeSortKey', () => {
     expect(potRangeSortKey('78-94')).toBe(94)
     expect(potRangeSortKey('72-86')).toBe(86)
     expect(potRangeSortKey('bad')).toBe(-1)
+  })
+})
+
+describe('isPotRangeDiffSix', () => {
+  it('is true only when max - min === 6', () => {
+    expect(isPotRangeDiffSix('85-91')).toBe(true)
+    expect(isPotRangeDiffSix('85 – 91')).toBe(true)
+    expect(isPotRangeDiffSix('82-94')).toBe(false)
+    expect(isPotRangeDiffSix('82')).toBe(false)
+    expect(isPotRangeDiffSix('')).toBe(false)
   })
 })

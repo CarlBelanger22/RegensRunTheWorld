@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildInitialPlayablePositions,
   countExtraPositions,
+  ensureSecondaryIncludesCurrent,
   fifaPositionSortKey,
   parsePositions,
 } from './positions'
@@ -92,5 +93,30 @@ describe('countExtraPositions', () => {
         initialPlayablePositions: ['CF', 'ST'],
       }),
     ).toBe(1)
+  })
+})
+
+describe('ensureSecondaryIncludesCurrent', () => {
+  it('appends current when it differs from natural', () => {
+    expect(ensureSecondaryIncludesCurrent('LB', 'LWB', 'CM, CF')).toBe(
+      'CM, CF, LWB',
+    )
+  })
+
+  it('keeps secondaries when current returns to natural', () => {
+    expect(ensureSecondaryIncludesCurrent('LB', 'LB', 'CM, CF, LWB')).toBe(
+      'CM, CF, LWB',
+    )
+  })
+
+  it('is a no-op when current is natural or already listed', () => {
+    expect(ensureSecondaryIncludesCurrent('LB', 'LB', 'CM')).toBe('CM')
+    expect(ensureSecondaryIncludesCurrent('LB', 'LWB', 'LWB, CM')).toBe(
+      'LWB, CM',
+    )
+  })
+
+  it('appends a second convert (may imply Broken in badges)', () => {
+    expect(ensureSecondaryIncludesCurrent('LB', 'CB', 'LWB')).toBe('LWB, CB')
   })
 })

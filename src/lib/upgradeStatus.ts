@@ -1,5 +1,6 @@
 import { countExtraPositions } from './positions'
-import { isGoalkeeper } from './players'
+import { isGoalkeeper } from './goalkeeper'
+import { isUpgradesSettled } from './rowStyle'
 import { isWorkRateMaxed, workRateStepDelta } from './workRate'
 import type { Player, UpgradeBadge, UpgradeStatus } from '../types/player'
 
@@ -80,6 +81,61 @@ export function getUpgradeStatus(player: Player): UpgradeStatus {
     wr: workRateBadge(player.initialWorkRate, player.currentWorkRate),
     position: positionBadge(player),
   }
+}
+
+export type UpgradeBadgesView =
+  | { mode: 'gk' }
+  | { mode: 'settled-clean' }
+  | { mode: 'pills'; badges: UpgradeBadge[] }
+
+/**
+ * What the Upgrades column should render.
+ * Settled: hide Avail/Used/Max; still show Broken. GK unchanged.
+ */
+export function getUpgradeBadgesView(player: Player): UpgradeBadgesView {
+  if (isGoalkeeper(player)) {
+    return { mode: 'gk' }
+  }
+
+  const status = getUpgradeStatus(player)
+  const pills = [status.smWf, status.wr, status.position]
+
+  if (isUpgradesSettled(player)) {
+    const broken = pills.filter((b) => b.kind === 'broken')
+    if (broken.length > 0) {
+      return { mode: 'pills', badges: broken }
+    }
+    return { mode: 'settled-clean' }
+  }
+
+  return { mode: 'pills', badges: pills }
+}
+
+/**
+ * True when SM/WF, WR, and Pos are all consumed (Used / Max) — not Avail, not Broken.
+ */
+export function allChallengeSlotsUsed(player: Player): boolean {
+  if (isGoalkeeper(player)) return true
+  const status = getUpgradeStatus(player)
+  return (
+    status.smWf.kind === 'used' &&
+    status.wr.kind === 'used' &&
+    status.position.kind === 'used'
+  )
+}
+
+/**
+ * Turn Settled on when all three challenge slots are used.
+ * Does not force Settled if the caller explicitly set upgradesSettled in this update.
+ */
+export function applyAutoUpgradesSettled(
+  player: Player,
+  options?: { upgradesSettledExplicit?: boolean },
+): Player {
+  if (options?.upgradesSettledExplicit) return player
+  if (player.upgradesSettled) return player
+  if (!allChallengeSlotsUsed(player)) return player
+  return { ...player, upgradesSettled: true }
 }
 
 /** True when destination/fee marks a sold alumni on the external tab. */

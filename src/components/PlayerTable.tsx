@@ -3,8 +3,9 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Plus } from 'lucide-react'
 import { UpgradeBadges } from './UpgradeBadges'
 import type { SortDir, SortKey } from '../lib/filterPlayers'
 import { formatTransferFee } from '../lib/formatMoney'
-import { parsePotRange } from '../lib/potRange'
+import { isPotRangeDiffSix, parsePotRange } from '../lib/potRange'
 import { bumpOvr, bumpStar } from '../lib/quickEdit'
+import { isOnLoan, isUpgradesSettled, playerRowTintClass, playerSettledRailClass } from '../lib/rowStyle'
 import { STATUS_POT_BANDS, type Player } from '../types/player'
 
 export type TableVariant = 'academy' | 'senior' | 'external'
@@ -68,9 +69,12 @@ function IncrementCell({
 function EditablePotCell({
   potRange,
   onSave,
+  underlineNarrow,
 }: {
   potRange: string
   onSave: (next: string) => void
+  /** YA: underline when scout range width is exactly 6. */
+  underlineNarrow?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(potRange)
@@ -135,6 +139,9 @@ function EditablePotCell({
     )
   }
 
+  const narrow =
+    underlineNarrow === true && isPotRangeDiffSix(potRange)
+
   return (
     <button
       type="button"
@@ -148,7 +155,14 @@ function EditablePotCell({
       }}
     >
       {potRange.trim() ? (
-        <span className="font-mono text-xs text-accent">{potRange}</span>
+        <span
+          className={[
+            'font-mono text-xs text-accent',
+            narrow ? 'underline decoration-accent underline-offset-2' : '',
+          ].join(' ')}
+        >
+          {potRange}
+        </span>
       ) : (
         <span className="text-[10px] text-zinc-500">—</span>
       )}
@@ -276,7 +290,8 @@ export function PlayerTable({
             <tr
               key={player.id}
               className={[
-                'border-b border-border/70 last:border-0 hover:bg-zinc-900/60',
+                'border-b border-border/70 last:border-0',
+                playerRowTintClass(player),
                 onRowClick ? 'cursor-pointer' : '',
               ].join(' ')}
               onClick={onRowClick ? () => onRowClick(player) : undefined}
@@ -292,13 +307,48 @@ export function PlayerTable({
               }
               tabIndex={onRowClick ? 0 : undefined}
             >
-              <td className={td}>
+              <td className={`${td} relative pl-3`}>
+                {onPatchPlayer ? (
+                  <button
+                    type="button"
+                    title={
+                      isUpgradesSettled(player)
+                        ? 'Settled — click to unset'
+                        : 'Click to mark upgrades settled'
+                    }
+                    aria-label={
+                      isUpgradesSettled(player)
+                        ? `${player.name}: upgrades settled, click to unset`
+                        : `${player.name}: mark upgrades settled`
+                    }
+                    aria-pressed={isUpgradesSettled(player)}
+                    className={[
+                      'absolute top-0 bottom-0 left-0 w-1.5 cursor-pointer border-0 p-0 transition-colors',
+                      playerSettledRailClass(player),
+                    ].join(' ')}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onPatchPlayer(player, {
+                        upgradesSettled: !isUpgradesSettled(player),
+                      })
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <span
+                    aria-hidden
+                    className={[
+                      'pointer-events-none absolute top-0 bottom-0 left-0 w-1.5',
+                      playerSettledRailClass(player),
+                    ].join(' ')}
+                  />
+                )}
                 <span className="font-mono font-medium text-ink">
                   {player.currentPosition}
                 </span>
                 {player.naturalPosition !== player.currentPosition ? (
                   <span className="ml-1 text-[10px] text-muted">
-                    (N:{player.naturalPosition})
+                    ({player.naturalPosition})
                   </span>
                 ) : null}
               </td>
@@ -306,6 +356,11 @@ export function PlayerTable({
                 <div className="font-medium leading-tight text-ink">
                   {player.name}
                 </div>
+                {isOnLoan(player) ? (
+                  <div className="text-[10px] leading-tight text-sky-300/90">
+                    On loan @ {player.loanClub?.trim()}
+                  </div>
+                ) : null}
                 {player.regenOf?.trim() ? (
                   <div className="text-[10px] leading-tight text-muted">
                     {player.regenOf.trim()}
@@ -332,12 +387,21 @@ export function PlayerTable({
                   {quick ? (
                     <EditablePotCell
                       potRange={player.potRange}
+                      underlineNarrow={variant === 'academy'}
                       onSave={(next) =>
                         onPatchPlayer?.(player, { potRange: next })
                       }
                     />
                   ) : player.potRange.trim() ? (
-                    <span className="font-mono text-xs text-accent">
+                    <span
+                      className={[
+                        'font-mono text-xs text-accent',
+                        variant === 'academy' &&
+                        isPotRangeDiffSix(player.potRange)
+                          ? 'underline decoration-accent underline-offset-2'
+                          : '',
+                      ].join(' ')}
+                    >
                       {player.potRange}
                     </span>
                   ) : (

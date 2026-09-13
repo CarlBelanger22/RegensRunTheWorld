@@ -1,4 +1,5 @@
 import { createPlayer } from './players'
+import { isNameReleased } from './releasedNames'
 import type { Player } from '../types/player'
 
 /**
@@ -163,6 +164,8 @@ export function mergeMissingSeniorAddons(players: Player[]): Player[] {
   ) {
     return players
   }
-  const missing = createSeniorAddonPlayers().filter((p) => !existing.has(p.name))
+  const missing = createSeniorAddonPlayers().filter(
+    (p) => !existing.has(p.name) && !isNameReleased(p.name),
+  )
   return missing.length === 0 ? players : [...players, ...missing]
 }

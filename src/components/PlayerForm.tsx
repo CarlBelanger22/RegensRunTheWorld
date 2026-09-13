@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { createPlayer } from '../lib/players'
+import { ensureSecondaryIncludesCurrent } from '../lib/positions'
 import { parsePotRange } from '../lib/potRange'
 import {
   PLAYER_SOURCES,
@@ -88,6 +89,17 @@ export function PlayerForm({ mode, onSubmit, onCancel }: PlayerFormProps) {
       ) {
         next.currentPosition = partial.naturalPosition
       }
+      if (
+        partial.currentPosition != null ||
+        partial.naturalPosition != null ||
+        partial.secondaryPositions != null
+      ) {
+        next.secondaryPositions = ensureSecondaryIncludesCurrent(
+          next.naturalPosition,
+          next.currentPosition,
+          next.secondaryPositions,
+        )
+      }
       return next
     })
     setError(null)
@@ -135,12 +147,17 @@ export function PlayerForm({ mode, onSubmit, onCancel }: PlayerFormProps) {
           ? 'external'
           : 'senior'
 
+    const currentPosition = form.currentPosition || form.naturalPosition
     const player = createPlayer({
       name,
       country,
       naturalPosition: form.naturalPosition,
-      currentPosition: form.currentPosition || form.naturalPosition,
-      secondaryPositions: form.secondaryPositions.trim(),
+      currentPosition,
+      secondaryPositions: ensureSecondaryIncludesCurrent(
+        form.naturalPosition,
+        currentPosition,
+        form.secondaryPositions,
+      ),
       ovr,
       height: form.height.trim(),
       potRange: potRange || '',

@@ -1,6 +1,7 @@
-import { Plus, ArrowUpRight, Banknote, UserMinus } from 'lucide-react'
+import { Plus, ArrowUpRight, Banknote, Plane, Undo2, UserMinus } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import { EditPlayerModal } from './EditPlayerModal'
+import { LoanModal } from './LoanModal'
 import { Modal } from './Modal'
 import { PlayerFilters } from './PlayerFilters'
 import { PlayerForm, type PlayerFormMode } from './PlayerForm'
@@ -13,7 +14,8 @@ import {
   type PlayerFilterState,
   type SortKey,
 } from '../lib/filterPlayers'
-import { promoteToSenior, touchPlayer } from '../lib/players'
+import { isOnLoan } from '../lib/rowStyle'
+import { promoteToSenior, recallPlayer, touchPlayer } from '../lib/players'
 import type { Player, SquadLocation } from '../types/player'
 
 interface SquadPanelProps {
@@ -43,6 +45,7 @@ export function SquadPanel({
   const [filters, setFilters] = useState<PlayerFilterState>(DEFAULT_FILTERS)
   const [addOpen, setAddOpen] = useState(false)
   const [sellTarget, setSellTarget] = useState<Player | null>(null)
+  const [loanTarget, setLoanTarget] = useState<Player | null>(null)
   const [editTarget, setEditTarget] = useState<Player | null>(null)
 
   const scoped = useMemo(
@@ -98,14 +101,35 @@ export function SquadPanel({
           </div>
         )
       : (player: Player) => (
-          <button
-            type="button"
-            onClick={() => setSellTarget(player)}
-            className="inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-ink hover:border-amber-700 hover:text-amber-200"
-          >
-            <Banknote className="size-3" aria-hidden />
-            Sell
-          </button>
+          <div className="flex flex-wrap gap-1">
+            {isOnLoan(player) ? (
+              <button
+                type="button"
+                onClick={() => onUpsertPlayer(recallPlayer(player))}
+                className="inline-flex items-center gap-0.5 rounded border border-sky-700/80 px-1.5 py-0.5 text-[10px] font-medium text-sky-200 hover:bg-sky-950/50"
+              >
+                <Undo2 className="size-3" aria-hidden />
+                Recall
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setLoanTarget(player)}
+                className="inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-ink hover:border-sky-700 hover:text-sky-200"
+              >
+                <Plane className="size-3" aria-hidden />
+                Loan
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setSellTarget(player)}
+              className="inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-ink hover:border-amber-700 hover:text-amber-200"
+            >
+              <Banknote className="size-3" aria-hidden />
+              Sell
+            </button>
+          </div>
         ))
 
   return (
@@ -116,7 +140,8 @@ export function SquadPanel({
           <p className="text-xs text-muted">{description}</p>
           <p className="text-[10px] text-zinc-500">
             {visible.length}/{scoped.length} · click headers to sort · hover
-            OVR/SM/WF for + · click POT to edit · click row for full edit
+            OVR/SM/WF for + · click POT to edit · left rail = settled · click
+            row for full edit
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -179,6 +204,16 @@ export function SquadPanel({
         onConfirm={(player) => {
           onUpsertPlayer(player)
           setSellTarget(null)
+        }}
+      />
+
+      <LoanModal
+        player={loanTarget}
+        open={loanTarget != null}
+        onClose={() => setLoanTarget(null)}
+        onConfirm={(player) => {
+          onUpsertPlayer(player)
+          setLoanTarget(null)
         }}
       />
 

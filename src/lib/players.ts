@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { buildInitialPlayablePositions } from './positions'
+import { applyAutoUpgradesSettled } from './upgradeStatus'
 import type { Player, PlayerSource, PlayerStatus, SquadLocation } from '../types/player'
 
 export type NewPlayerInput = Omit<
@@ -20,13 +21,23 @@ export function createPlayer(input: NewPlayerInput): Player {
       input.secondaryPositions,
     )
 
-  return {
+  const isGk =
+    input.naturalPosition.trim().toUpperCase() === 'GK' ||
+    input.currentPosition.trim().toUpperCase() === 'GK'
+
+  const player: Player = {
     ...input,
     id: input.id ?? nanoid(),
     height: (input.height ?? '').trim(),
     initialPlayablePositions,
+    // GKs have no SM/WF/WR/pos challenge — mark settled on create
+    upgradesSettled: input.upgradesSettled ?? isGk,
     updatedAt: input.updatedAt ?? Date.now(),
   }
+
+  return applyAutoUpgradesSettled(player, {
+    upgradesSettledExplicit: input.upgradesSettled !== undefined,
+  })
 }
 
 export function touchPlayer(player: Player, patch: Partial<Player>): Player {
@@ -39,7 +50,7 @@ export function touchPlayer(player: Player, patch: Partial<Player>): Player {
     ...safePatch
   } = patch
 
-  return {
+  const next: Player = {
     ...player,
     ...safePatch,
     id: player.id,
@@ -49,6 +60,13 @@ export function touchPlayer(player: Player, patch: Partial<Player>): Player {
     initialWorkRate: player.initialWorkRate,
     updatedAt: Date.now(),
   }
+
+  return applyAutoUpgradesSettled(next, {
+    upgradesSettledExplicit: Object.prototype.hasOwnProperty.call(
+      patch,
+      'upgradesSettled',
+    ),
+  })
 }
 
 export type FrozenBaselinePatch = {
@@ -96,18 +114,24 @@ export function sellPlayer(
     squadLocation: 'external',
     destinationClub,
     transferFee,
+    loanClub: '',
   })
 }
 
-/** GKs are exempt from SM/WF either-or challenge limits. */
-export function isGoalkeeper(player: {
-  naturalPosition: string
-  currentPosition: string
-}): boolean {
-  return (
-    player.naturalPosition.trim().toUpperCase() === 'GK' ||
-    player.currentPosition.trim().toUpperCase() === 'GK'
-  )
+/** Send on loan — stays senior; club required (no fee). */
+export function loanPlayer(player: Player, loanClub: string): Player {
+  const club = loanClub.trim()
+  return touchPlayer(player, {
+    squadLocation: 'senior' satisfies SquadLocation,
+    loanClub: club,
+  })
 }
+
+/** End loan — clear loan club. */
+export function recallPlayer(player: Player): Player {
+  return touchPlayer(player, { loanClub: '' })
+}
+
+export { isGoalkeeper } from './goalkeeper'
 
 export type { PlayerSource, PlayerStatus, SquadLocation }

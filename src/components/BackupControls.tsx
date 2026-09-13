@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Download, Upload } from 'lucide-react'
 import { downloadPlayersBackup, parseBackup } from '../lib/backup'
+import { replaceReleasedNames } from '../lib/releasedNames'
 import type { Player } from '../types/player'
 
 const btnClass =
@@ -17,10 +18,23 @@ export function BackupControls({
 }: BackupControlsProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
+
+  const handleExport = async () => {
+    setError(null)
+    setNote(null)
+    const { filename, workspaceSaved } = await downloadPlayersBackup(players)
+    setNote(
+      workspaceSaved
+        ? `Downloaded ${filename} and saved to backups/`
+        : `Downloaded ${filename} (workspace backups/ only when running npm run dev)`,
+    )
+  }
 
   const handleImportFile = async (file: File | undefined) => {
     if (!file) return
     setError(null)
+    setNote(null)
 
     let text: string
     try {
@@ -36,12 +50,20 @@ export function BackupControls({
       return
     }
 
+    const releasedLine =
+      result.releasedNames !== undefined
+        ? `\nReleased names in file: ${result.releasedNames.length} (will replace tombstones).`
+        : '\nOlder backup: existing released-name list in this browser will be kept.'
+
     const confirmed = window.confirm(
-      `This replaces all players currently in the app with ${result.players.length} player(s) from the backup.\n\nContinue?`,
+      `This replaces all players currently in the app with ${result.players.length} player(s) from the backup.${releasedLine}\n\nContinue?`,
     )
     if (!confirmed) return
 
     onReplacePlayers(result.players)
+    if (result.releasedNames !== undefined) {
+      replaceReleasedNames(result.releasedNames)
+    }
   }
 
   return (
@@ -49,9 +71,11 @@ export function BackupControls({
       <div className="flex flex-wrap gap-1.5">
         <button
           type="button"
-          onClick={() => downloadPlayersBackup(players)}
+          onClick={() => {
+            void handleExport()
+          }}
           className={btnClass}
-          title="Download a JSON backup of all players"
+          title="Download a JSON backup (and write backups/ while on local dev server)"
         >
           <Download className="size-3.5 shrink-0" aria-hidden />
           Export backup
@@ -60,6 +84,7 @@ export function BackupControls({
           type="button"
           onClick={() => {
             setError(null)
+            setNote(null)
             fileRef.current?.click()
           }}
           className={btnClass}
@@ -84,6 +109,9 @@ export function BackupControls({
         <p className="max-w-xs text-right text-[10px] text-red-300" role="alert">
           {error}
         </p>
+      ) : null}
+      {!error && note ? (
+        <p className="max-w-xs text-right text-[10px] text-muted">{note}</p>
       ) : null}
     </div>
   )
