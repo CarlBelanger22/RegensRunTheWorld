@@ -14,6 +14,7 @@ import {
   type PlayerFilterState,
   type SortKey,
 } from '../lib/filterPlayers'
+import { movePlayerAmongVisiblePeers } from '../lib/listOrder'
 import { isOnLoan } from '../lib/rowStyle'
 import { promoteToSenior, recallPlayer, touchPlayer } from '../lib/players'
 import type { Player, SquadLocation } from '../types/player'
@@ -25,6 +26,8 @@ interface SquadPanelProps {
   variant: Exclude<TableVariant, 'external'>
   players: Player[]
   onUpsertPlayer: (player: Player) => void
+  /** Bulk replace (used for within-position reorder). */
+  onReplacePlayers?: (players: Player[]) => void
   /** Academy Release — permanently deletes the player. */
   onRemovePlayer?: (id: string) => void
   headerAction?: ReactNode
@@ -38,6 +41,7 @@ export function SquadPanel({
   variant,
   players,
   onUpsertPlayer,
+  onReplacePlayers,
   onRemovePlayer,
   headerAction,
   renderRowActions,
@@ -47,6 +51,7 @@ export function SquadPanel({
   const [sellTarget, setSellTarget] = useState<Player | null>(null)
   const [loanTarget, setLoanTarget] = useState<Player | null>(null)
   const [editTarget, setEditTarget] = useState<Player | null>(null)
+  const [showOrderColumn, setShowOrderColumn] = useState(false)
 
   const scoped = useMemo(
     () => players.filter((p) => p.squadLocation === location),
@@ -58,8 +63,18 @@ export function SquadPanel({
     [scoped, filters],
   )
 
+  const allowReorder =
+    showOrderColumn && filters.sort === 'pos' && Boolean(onReplacePlayers)
+
   const handleSort = (key: SortKey) => {
     setFilters((prev) => ({ ...prev, ...nextSortState(prev, key) }))
+  }
+
+  const handleReorder = (playerId: string, direction: 'up' | 'down') => {
+    if (!onReplacePlayers) return
+    onReplacePlayers(
+      movePlayerAmongVisiblePeers(players, visible, playerId, direction),
+    )
   }
 
   const addMode: PlayerFormMode =
@@ -139,13 +154,45 @@ export function SquadPanel({
           <h2 className="text-base font-semibold text-ink">{title}</h2>
           <p className="text-xs text-muted">{description}</p>
           <p className="text-[10px] text-zinc-500">
-            {visible.length}/{scoped.length} · click headers to sort · hover
-            OVR/SM/WF for + · click POT to edit · left rail = settled · click
-            row for full edit
+            {visible.length}/{scoped.length} · click headers to sort · use
+            Reorder to show ↑↓ for same position · hover OVR/SM/WF for + · click
+            POT to edit · left rail = settled · click row for full edit
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {headerAction}
+          {onReplacePlayers ? (
+            <button
+              type="button"
+              onClick={() => {
+                setShowOrderColumn((v) => {
+                  const next = !v
+                  if (next) {
+                    setFilters((prev) =>
+                      prev.sort === 'pos'
+                        ? prev
+                        : { ...prev, sort: 'pos', sortDir: 'asc' },
+                    )
+                  }
+                  return next
+                })
+              }}
+              aria-pressed={showOrderColumn}
+              title={
+                showOrderColumn
+                  ? 'Hide the Ord column'
+                  : 'Show Ord ↑↓ to reshuffle within the same position'
+              }
+              className={[
+                'inline-flex items-center gap-1 rounded border px-2 py-1 text-xs font-medium transition-colors',
+                showOrderColumn
+                  ? 'border-accent-dim bg-accent/15 text-accent'
+                  : 'border-border bg-panel-raised text-muted hover:border-zinc-500 hover:text-ink',
+              ].join(' ')}
+            >
+              {showOrderColumn ? 'Hide reorder' : 'Reorder'}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => setAddOpen(true)}
@@ -174,6 +221,8 @@ export function SquadPanel({
         sort={filters.sort}
         sortDir={filters.sortDir}
         onSort={handleSort}
+        allowReorder={allowReorder}
+        onReorderPlayer={allowReorder ? handleReorder : undefined}
         emptyMessage={
           scoped.length === 0
             ? 'No players in this squad yet.'

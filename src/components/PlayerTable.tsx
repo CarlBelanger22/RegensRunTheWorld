@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpDown, Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import { UpgradeBadges } from './UpgradeBadges'
 import type { SortDir, SortKey } from '../lib/filterPlayers'
 import { formatTransferFee } from '../lib/formatMoney'
+import {
+  canMovePlayerDown,
+  canMovePlayerUp,
+} from '../lib/listOrder'
 import { isPotRangeDiffSix, parsePotRange } from '../lib/potRange'
 import { bumpOvr, bumpStar } from '../lib/quickEdit'
 import { isOnLoan, isUpgradesSettled, playerRowTintClass, playerSettledRailClass } from '../lib/rowStyle'
@@ -25,6 +29,9 @@ interface PlayerTableProps {
   sort: SortKey
   sortDir: SortDir
   onSort: (key: SortKey) => void
+  /** Show ↑↓ to reorder within the same Current position (Pos sort only). */
+  allowReorder?: boolean
+  onReorderPlayer?: (playerId: string, direction: 'up' | 'down') => void
 }
 
 const th = 'px-2 py-1.5 font-medium'
@@ -234,6 +241,8 @@ export function PlayerTable({
   sort,
   sortDir,
   onSort,
+  allowReorder = false,
+  onReorderPlayer,
 }: PlayerTableProps) {
   if (players.length === 0) {
     return (
@@ -253,6 +262,7 @@ export function PlayerTable({
   const showUpgrades = variant !== 'external'
   const showSmWfWr = !hideSmWfWr
   const quick = Boolean(onPatchPlayer)
+  const showReorder = allowReorder && Boolean(onReorderPlayer)
 
   const sortTh = (label: string, sortKey: SortKey) => (
     <SortableTh
@@ -270,6 +280,11 @@ export function PlayerTable({
         <thead className="border-b border-border bg-panel-raised text-[10px] tracking-wide text-muted uppercase">
           <tr>
             {sortTh('Pos', 'pos')}
+            {showReorder ? (
+              <th className={`${th} w-10 text-center`} title="Reorder within position">
+                Ord
+              </th>
+            ) : null}
             {sortTh('Name', 'name')}
             {sortTh('Nation', 'nation')}
             {sortTh('OVR', 'ovr')}
@@ -352,6 +367,36 @@ export function PlayerTable({
                   </span>
                 ) : null}
               </td>
+              {showReorder ? (
+                <td className={`${td} w-10`}>
+                  <div
+                    className="flex flex-col items-center gap-0"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      title="Move up within position"
+                      aria-label={`Move ${player.name} up within position`}
+                      disabled={!canMovePlayerUp(players, player.id)}
+                      className="inline-flex size-4 items-center justify-center rounded text-muted hover:bg-panel-raised hover:text-ink disabled:invisible"
+                      onClick={() => onReorderPlayer?.(player.id, 'up')}
+                    >
+                      <ChevronUp className="size-3.5" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      title="Move down within position"
+                      aria-label={`Move ${player.name} down within position`}
+                      disabled={!canMovePlayerDown(players, player.id)}
+                      className="inline-flex size-4 items-center justify-center rounded text-muted hover:bg-panel-raised hover:text-ink disabled:invisible"
+                      onClick={() => onReorderPlayer?.(player.id, 'down')}
+                    >
+                      <ChevronDown className="size-3.5" aria-hidden />
+                    </button>
+                  </div>
+                </td>
+              ) : null}
               <td className={td}>
                 <div className="font-medium leading-tight text-ink">
                   {player.name}

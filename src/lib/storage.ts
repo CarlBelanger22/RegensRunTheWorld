@@ -1,5 +1,6 @@
 import { createSeedPlayers } from './seed'
 import { mergeMissingAcademyAddons } from './academyAddons'
+import { ensureListOrders } from './listOrder'
 import {
   clearReleasedNamesStorage,
   isNameReleased,
@@ -87,13 +88,13 @@ function mergeMissingAcademyPlayers(players: Player[]): Player[] {
 
 export function loadPlayers(): Player[] {
   const storage = getStorage()
-  if (!storage) return createSeedPlayers()
+  if (!storage) return ensureListOrders(createSeedPlayers())
 
   purgeLegacyKeys(storage)
 
   const raw = storage.getItem(STORAGE_KEY)
   if (!raw) {
-    const seed = omitReleasedPlayers(createSeedPlayers())
+    const seed = ensureListOrders(omitReleasedPlayers(createSeedPlayers()))
     savePlayers(seed)
     return seed
   }
@@ -101,29 +102,31 @@ export function loadPlayers(): Player[] {
   try {
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) {
-      const seed = omitReleasedPlayers(createSeedPlayers())
+      const seed = ensureListOrders(omitReleasedPlayers(createSeedPlayers()))
       savePlayers(seed)
       return seed
     }
-    const players = mergeMissingSeniorAddons(
-      mergeMissingAcademyAddons(
-        mergeMissingAcademyPlayers(
-          omitReleasedPlayers(
-            applyDataCorrections(
-              (parsed as Player[]).map((p) => ({
-                ...p,
-                height: typeof p.height === 'string' ? p.height : '',
-              })),
+    const players = ensureListOrders(
+      mergeMissingSeniorAddons(
+        mergeMissingAcademyAddons(
+          mergeMissingAcademyPlayers(
+            omitReleasedPlayers(
+              applyDataCorrections(
+                (parsed as Player[]).map((p) => ({
+                  ...p,
+                  height: typeof p.height === 'string' ? p.height : '',
+                })),
+              ),
             ),
           ),
         ),
-      ),
-    ).map((p) => applyAutoUpgradesSettled(p))
+      ).map((p) => applyAutoUpgradesSettled(p)),
+    )
     savePlayers(players)
     return players
   } catch (error) {
     console.warn('[rrtw] Failed to parse players from localStorage', error)
-    const seed = createSeedPlayers()
+    const seed = ensureListOrders(createSeedPlayers())
     savePlayers(seed)
     return seed
   }

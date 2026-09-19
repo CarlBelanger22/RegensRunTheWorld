@@ -54,5 +54,6 @@ Senior and External rows tint by FIFA status. Players **on loan** use a sky-blue
 ### Day to day
 
 - Changes save automatically in this browser.
-- **Export backup** / **Import backup** in the header move a save between machines (import replaces the whole roster after confirm). Export is **v2**: full player fields (including settled, loan club, secondaries) plus the **released-name** list so Releases survive on another browser. Older backups still import and keep this browser’s released list. With `npm run dev`, Export also writes `backups/rrtw-backup-YYYY-MM-DD.json` (replaces prior dated files there).
+- **Export backup** / **Import backup** in the header move a save between machines (import replaces the whole roster after confirm). Export is **v2**: full player fields (including settled, loan club, secondaries, list order) plus the **released-name** list so Releases survive on another browser. Older backups still import and keep this browser’s released list. With `npm run dev`, Export also writes `backups/rrtw-backup-YYYY-MM-DD.json` (replaces prior dated files there).
+- On **Senior** and **Youth Academy**, click **Reorder** to show the Ord ↑↓ column (Pos sort) and reshuffle players who share the same Current position. Click **Hide reorder** when you’re done. Other sorts hide the column even if Reorder is on.
 - Tips: hover **+** on OVR / SM / WF to bump; click POT to edit inline; in Edit, use **Edit baseline** if a frozen init value was logged wrong.

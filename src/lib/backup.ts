@@ -87,6 +87,10 @@ function normalizePlayer(raw: unknown): Player | null {
         : undefined,
     loanClub,
     upgradesSettled,
+    listOrder:
+      typeof p.listOrder === 'number' && Number.isFinite(p.listOrder)
+        ? p.listOrder
+        : undefined,
     notes:
       typeof p.notes === 'string' && p.notes.trim() ? p.notes.trim() : undefined,
     updatedAt: asNumber(p.updatedAt, Date.now()),

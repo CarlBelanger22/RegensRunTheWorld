@@ -75,6 +75,7 @@ function App() {
             variant="academy"
             players={players}
             onUpsertPlayer={upsertPlayer}
+            onReplacePlayers={setPlayers}
             onRemovePlayer={removePlayer}
           />
         )}
@@ -86,6 +87,7 @@ function App() {
             variant="senior"
             players={players}
             onUpsertPlayer={upsertPlayer}
+            onReplacePlayers={setPlayers}
           />
         )}
         {activeTab === 'external' && (

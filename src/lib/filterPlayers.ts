@@ -1,4 +1,5 @@
 import { potRangeSortKey } from './potRange'
+import { listOrderValue } from './listOrder'
 import { fifaPositionSortKey } from './positions'
 import {
   PLAYER_STATUSES,
@@ -114,11 +115,15 @@ function matchesStatus(
 /** Ascending compare; caller flips for desc. */
 function comparePlayers(a: Player, b: Player, sort: SortKey): number {
   switch (sort) {
-    case 'pos':
-      return (
+    case 'pos': {
+      const byPos =
         fifaPositionSortKey(a.currentPosition) -
         fifaPositionSortKey(b.currentPosition)
-      )
+      if (byPos !== 0) return byPos
+      const byOrder = listOrderValue(a) - listOrderValue(b)
+      if (byOrder !== 0) return byOrder
+      return a.name.localeCompare(b.name)
+    }
     case 'name':
       return a.name.localeCompare(b.name)
     case 'nation':

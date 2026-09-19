@@ -89,6 +89,11 @@ export interface Player {
    * Shown as a left rail on the row — independent of FIFA status tint.
    */
   upgradesSettled?: boolean
+  /**
+   * Manual list order within a Current-position group (Pos sort secondary key).
+   * Lower = higher in the table when sorted by Pos ascending.
+   */
+  listOrder?: number
   notes?: string
   updatedAt: number
 }

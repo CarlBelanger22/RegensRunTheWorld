@@ -299,17 +299,47 @@ describe('academyAddons', () => {
     expect(createAcademyAddonPlayers()[0]?.potRange).toBe('82-94')
   })
 
-  it('includes Gordson, Santoro, and Bird', () => {
+  it('includes Gordson, Santoro, Bird, Bellini, and Lombardi', () => {
     const names = createAcademyAddonPlayers().map((p) => p.name)
     expect(names).toEqual(
       expect.arrayContaining([
         'Steven Gordson',
         'Marco Santoro',
         'Lucas Bird',
+        'Piero Bellini',
+        'Filippo Lombardi',
+        'Carmine Abate',
+        'Logan Wilson',
+        'Carlo Santoro',
+        'Arthur Anderson',
+        'Edward Kirk',
+        'Massimo Monti',
+        'Paolo Longo',
       ]),
     )
     expect(
       createAcademyAddonPlayers().find((p) => p.name === 'Lucas Bird')?.potRange,
     ).toBe('77-94')
+    expect(
+      createAcademyAddonPlayers().find((p) => p.name === 'Piero Bellini'),
+    ).toMatchObject({
+      naturalPosition: 'RB',
+      ovr: 56,
+      potRange: '76-94',
+      initialSM: 2,
+      initialWF: 4,
+      initialWorkRate: 'L/H',
+    })
+    expect(
+      createAcademyAddonPlayers().find((p) => p.name === 'Filippo Lombardi'),
+    ).toMatchObject({
+      naturalPosition: 'LB',
+      secondaryPositions: 'CB',
+      ovr: 60,
+      potRange: '75-93',
+      initialSM: 3,
+      initialWF: 4,
+      initialWorkRate: 'M/M',
+    })
   })
 })
