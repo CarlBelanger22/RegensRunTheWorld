@@ -148,6 +148,26 @@ export function createSeniorAddonPlayers(now = Date.now()): Player[] {
       squadLocation: 'senior',
       updatedAt: now,
     }),
+    createPlayer({
+      name: 'Max Leonard',
+      country: 'England',
+      naturalPosition: 'ST',
+      currentPosition: 'ST',
+      secondaryPositions: '',
+      ovr: 78,
+      height: "5'5\"",
+      potRange: '',
+      status: null,
+      source: 'Unknown',
+      initialSM: 4,
+      currentSM: 4,
+      initialWF: 4,
+      currentWF: 4,
+      initialWorkRate: 'H/L',
+      currentWorkRate: 'H/L',
+      squadLocation: 'senior',
+      updatedAt: now,
+    }),
   ]
 }
 

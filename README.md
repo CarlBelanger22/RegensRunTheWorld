@@ -26,9 +26,9 @@ npm run build # production build
 
 ### Tabs (in order)
 
-1. **Senior Squad** — Add players with a FIFA status. **Sell/transfer** (club + fee) or **Loan / Recall** (club only; player stays on Senior). Click a row to edit. Players promoted from the academy arrive with status unset until you set it.
+1. **Senior Squad** — Add players with a FIFA status. **Sell/transfer** (club + fee) or **Loan / Recall** (club only). Players at the club are listed above; players **on loan** sit in a section below. Click a row to edit. Players promoted from the academy arrive with status unset until you set it.
 2. **Youth Academy** — Track scout **POT as a min–max range** (no status yet). Promote to senior, or **Release** to remove a prospect (they stay gone after refresh / merge).
-3. **External Regens & Transfers** — Two columns: **Scouted** and **Who Left**. Who Left hides SM / WF / WR columns.
+3. **External Regens & Transfers** — Stacked: **Scouted** (Club column and **Sign** onto the senior squad) above **Who Left**. Who Left hides SM / WF / WR columns. Signed players arrive with status unset.
 
 ### Challenge rules (badges)
 
@@ -45,7 +45,7 @@ Starting SM, WF, WR, and playable positions are frozen as the challenge baseline
 
 **Positions** — Natural is shown as e.g. `(LB)`. If **Current** differs from Natural, that code is added to **Secondaries** on create/save so converts stick when Current returns to Natural.
 
-Academy keeps POT as a range only (a 6-point span is underlined as a cue). After promote or when adding a senior/external player, pick one of the four FIFA statuses manually (not derived from the range).
+Academy keeps POT as a range only (a span of 6 points or less is underlined as a cue). After promote or when adding a senior/external player, pick one of the four FIFA statuses manually (not derived from the range).
 
 ### Row colors
 

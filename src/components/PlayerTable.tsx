@@ -7,7 +7,7 @@ import {
   canMovePlayerDown,
   canMovePlayerUp,
 } from '../lib/listOrder'
-import { isPotRangeDiffSix, parsePotRange } from '../lib/potRange'
+import { isPotRangeSpanUnderSix, parsePotRange } from '../lib/potRange'
 import { bumpOvr, bumpStar } from '../lib/quickEdit'
 import { isOnLoan, isUpgradesSettled, playerRowTintClass, playerSettledRailClass } from '../lib/rowStyle'
 import { STATUS_POT_BANDS, type Player } from '../types/player'
@@ -24,6 +24,8 @@ interface PlayerTableProps {
   onPatchPlayer?: (player: Player, patch: Partial<Player>) => void
   /** Hide transfer column (useful inside already-split external sections). */
   hideTransferColumn?: boolean
+  /** Scouted club stored in notes, shown as its own column. */
+  showClubColumn?: boolean
   /** Hide SM / WF / WR (e.g. Regens Who Left). */
   hideSmWfWr?: boolean
   sort: SortKey
@@ -80,7 +82,7 @@ function EditablePotCell({
 }: {
   potRange: string
   onSave: (next: string) => void
-  /** YA: underline when scout range width is exactly 6. */
+  /** YA: underline when scout range width is 6 or less. */
   underlineNarrow?: boolean
 }) {
   const [editing, setEditing] = useState(false)
@@ -147,7 +149,7 @@ function EditablePotCell({
   }
 
   const narrow =
-    underlineNarrow === true && isPotRangeDiffSix(potRange)
+    underlineNarrow === true && isPotRangeSpanUnderSix(potRange)
 
   return (
     <button
@@ -237,6 +239,7 @@ export function PlayerTable({
   onRowClick,
   onPatchPlayer,
   hideTransferColumn = false,
+  showClubColumn = false,
   hideSmWfWr = false,
   sort,
   sortDir,
@@ -286,6 +289,7 @@ export function PlayerTable({
               </th>
             ) : null}
             {sortTh('Name', 'name')}
+            {showClubColumn ? <th className={th}>Club</th> : null}
             {sortTh('Nation', 'nation')}
             {sortTh('OVR', 'ovr')}
             {showPotRange ? sortTh('POT', 'pot') : null}
@@ -412,6 +416,11 @@ export function PlayerTable({
                   </div>
                 ) : null}
               </td>
+              {showClubColumn ? (
+                <td className={`${td} text-muted`}>
+                  {player.notes?.trim() || '—'}
+                </td>
+              ) : null}
               <td className={`${td} text-muted`}>{player.country}</td>
               <td className={`${td} font-semibold`}>
                 {quick ? (
@@ -442,7 +451,7 @@ export function PlayerTable({
                       className={[
                         'font-mono text-xs text-accent',
                         variant === 'academy' &&
-                        isPotRangeDiffSix(player.potRange)
+                        isPotRangeSpanUnderSix(player.potRange)
                           ? 'underline decoration-accent underline-offset-2'
                           : '',
                       ].join(' ')}

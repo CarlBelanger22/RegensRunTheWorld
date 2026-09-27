@@ -52,8 +52,8 @@ export function LoanModal({
     >
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <p className="text-xs text-muted">
-          Keeps the player on Senior Squad and marks them out on loan (club
-          only — no fee).
+          Moves them into the On Loan section under the senior squad (club
+          only — no fee). They stay in your save.
         </p>
 
         <label className="flex flex-col gap-1 text-xs text-muted">

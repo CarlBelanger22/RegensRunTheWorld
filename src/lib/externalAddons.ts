@@ -1,0 +1,206 @@
+import { createPlayer, type NewPlayerInput } from './players'
+import { isNameReleased } from './releasedNames'
+import type { Player } from '../types/player'
+
+type ScoutInput = Omit<
+  NewPlayerInput,
+  'potRange' | 'status' | 'source' | 'squadLocation' | 'notes'
+> & { club: string }
+
+/**
+ * Scouted external regens from GTN screenshots.
+ * No destination/fee, so they stay in Scouted. Current club is in notes.
+ */
+export function createExternalAddonPlayers(now = Date.now()): Player[] {
+  const scouted = (input: ScoutInput): Player => {
+    const { club, ...rest } = input
+    return createPlayer({
+      ...rest,
+      potRange: '',
+      status: null,
+      source: 'Regen',
+      squadLocation: 'external',
+      notes: club,
+      updatedAt: now,
+    })
+  }
+
+  return [
+    scouted({
+      name: 'Ismael Cruz',
+      country: 'Spain',
+      naturalPosition: 'CB',
+      currentPosition: 'CB',
+      secondaryPositions: '',
+      ovr: 74,
+      height: "6'1\"",
+      initialSM: 3,
+      currentSM: 3,
+      initialWF: 4,
+      currentWF: 4,
+      initialWorkRate: 'L/H',
+      currentWorkRate: 'L/H',
+      club: 'FC Barcelona',
+    }),
+    scouted({
+      name: 'Jose Guera',
+      country: 'Portugal',
+      naturalPosition: 'CM',
+      currentPosition: 'CM',
+      secondaryPositions: '',
+      ovr: 71,
+      height: "5'9\"",
+      initialSM: 3,
+      currentSM: 3,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'M/M',
+      currentWorkRate: 'M/M',
+      club: 'Granada CF',
+    }),
+    scouted({
+      name: 'Eduardo Machado',
+      country: 'Brazil',
+      naturalPosition: 'CB',
+      currentPosition: 'CB',
+      secondaryPositions: '',
+      ovr: 70,
+      height: "6'0\"",
+      initialSM: 2,
+      currentSM: 2,
+      initialWF: 2,
+      currentWF: 2,
+      initialWorkRate: 'L/L',
+      currentWorkRate: 'L/L',
+      club: 'Free Agents',
+    }),
+    scouted({
+      name: 'Demir Kovačević',
+      country: 'Bosnia and Herzegovina',
+      naturalPosition: 'ST',
+      currentPosition: 'ST',
+      secondaryPositions: '',
+      ovr: 75,
+      height: "5'10\"",
+      initialSM: 4,
+      currentSM: 4,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'H/L',
+      currentWorkRate: 'H/L',
+      club: 'Salernitana',
+    }),
+    scouted({
+      name: 'Roldão Barros',
+      country: 'Portugal',
+      naturalPosition: 'LM',
+      currentPosition: 'LM',
+      secondaryPositions: 'LW',
+      ovr: 67,
+      height: "5'9\"",
+      initialSM: 5,
+      currentSM: 5,
+      initialWF: 5,
+      currentWF: 5,
+      initialWorkRate: 'H/M',
+      currentWorkRate: 'H/M',
+      club: 'Genoa',
+    }),
+    scouted({
+      name: 'Johannes Jönsson',
+      country: 'Sweden',
+      naturalPosition: 'ST',
+      currentPosition: 'ST',
+      secondaryPositions: '',
+      ovr: 75,
+      height: "6'0\"",
+      initialSM: 4,
+      currentSM: 4,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'H/M',
+      currentWorkRate: 'H/M',
+      club: 'Milan',
+    }),
+    scouted({
+      name: 'Lorenzo Petit',
+      country: 'Belgium',
+      naturalPosition: 'CM',
+      currentPosition: 'CM',
+      secondaryPositions: 'CAM, CDM',
+      ovr: 71,
+      height: "6'0\"",
+      initialSM: 4,
+      currentSM: 4,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'M/L',
+      currentWorkRate: 'M/L',
+      club: 'Free Agents',
+    }),
+    scouted({
+      name: 'Carlos Teixeira',
+      country: 'Brazil',
+      naturalPosition: 'CDM',
+      currentPosition: 'CDM',
+      secondaryPositions: '',
+      ovr: 76,
+      height: "5'11\"",
+      initialSM: 4,
+      currentSM: 4,
+      initialWF: 2,
+      currentWF: 2,
+      initialWorkRate: 'L/M',
+      currentWorkRate: 'L/M',
+      club: 'Fulham',
+    }),
+    scouted({
+      name: 'Aaron Michiels',
+      country: 'Belgium',
+      naturalPosition: 'CF',
+      currentPosition: 'CF',
+      secondaryPositions: 'ST, CAM',
+      ovr: 82,
+      height: "5'10\"",
+      initialSM: 4,
+      currentSM: 4,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'H/L',
+      currentWorkRate: 'H/L',
+      club: '1. FSV Mainz 05',
+    }),
+    scouted({
+      name: 'Sebastian Pfeiffer',
+      country: 'Germany',
+      naturalPosition: 'CF',
+      currentPosition: 'CF',
+      secondaryPositions: 'CAM',
+      ovr: 78,
+      height: "5'11\"",
+      initialSM: 3,
+      currentSM: 3,
+      initialWF: 3,
+      currentWF: 3,
+      initialWorkRate: 'L/M',
+      currentWorkRate: 'L/M',
+      club: 'Sport-Club Freiburg',
+    }),
+  ]
+}
+
+/** Append missing scouted regens into an existing career save (by name). */
+export function mergeMissingExternalAddons(players: Player[]): Player[] {
+  const existing = new Set(players.map((p) => p.name))
+  if (
+    !existing.has('Matěj Liška') &&
+    !existing.has('Breno Duarte') &&
+    !existing.has('Jack Rogerson')
+  ) {
+    return players
+  }
+  const missing = createExternalAddonPlayers().filter(
+    (p) => !existing.has(p.name) && !isNameReleased(p.name),
+  )
+  return missing.length === 0 ? players : [...players, ...missing]
+}

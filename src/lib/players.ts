@@ -105,6 +105,14 @@ export function promoteToSenior(player: Player): Player {
   })
 }
 
+/** Sign a scouted external regen. Club note is dropped; status stays unset. */
+export function signToSenior(player: Player): Player {
+  return touchPlayer(player, {
+    squadLocation: 'senior' satisfies SquadLocation,
+    notes: '',
+  })
+}
+
 export function sellPlayer(
   player: Player,
   destinationClub: string,

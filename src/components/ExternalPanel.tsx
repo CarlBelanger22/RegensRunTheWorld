@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, UserPlus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { EditPlayerModal } from './EditPlayerModal'
 import { Modal } from './Modal'
@@ -13,7 +13,7 @@ import {
   type SortKey,
 } from '../lib/filterPlayers'
 import { isSoldAlumni } from '../lib/upgradeStatus'
-import { touchPlayer } from '../lib/players'
+import { signToSenior, touchPlayer } from '../lib/players'
 import type { Player } from '../types/player'
 
 interface ExternalPanelProps {
@@ -60,8 +60,8 @@ export function ExternalPanel({
             External Regens & Transfers
           </h2>
           <p className="text-xs text-muted">
-            Scouted left · sold right · hover OVR/SM/WF for + · click row to
-            edit
+            Scouted above · who left below · hover OVR/SM/WF for + · click row
+            to edit
           </p>
           <p className="text-[10px] text-zinc-500">
             {scouted.length} scouted · {left.length} left · {filtered.length}/
@@ -84,7 +84,7 @@ export function ExternalPanel({
         variant="external"
       />
 
-      <div className="grid gap-2.5 lg:grid-cols-2">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h3 className="text-xs font-semibold text-ink">
             Scouted External Regens
@@ -93,6 +93,20 @@ export function ExternalPanel({
             players={scouted}
             variant="external"
             hideTransferColumn
+            showClubColumn
+            renderActions={(player) => (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onUpsertPlayer(signToSenior(player))
+                }}
+                className="inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-ink hover:border-accent-dim hover:text-accent"
+              >
+                <UserPlus className="size-3" aria-hidden />
+                Sign
+              </button>
+            )}
             onRowClick={setEditTarget}
             onPatchPlayer={(player, patch) =>
               onUpsertPlayer(touchPlayer(player, patch))

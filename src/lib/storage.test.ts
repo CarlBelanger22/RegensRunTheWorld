@@ -1,10 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createPlayer, promoteToSenior, sellPlayer, loanPlayer, recallPlayer, correctFrozenBaseline, touchPlayer } from './players'
+import { createPlayer, promoteToSenior, signToSenior, sellPlayer, loanPlayer, recallPlayer, correctFrozenBaseline, touchPlayer } from './players'
 import { createSeedPlayers } from './seed'
 import {
   createAcademyAddonPlayers,
   mergeMissingAcademyAddons,
 } from './academyAddons'
+import {
+  createExternalAddonPlayers,
+  mergeMissingExternalAddons,
+} from './externalAddons'
 import {
   createSeniorAddonPlayers,
   mergeMissingSeniorAddons,
@@ -109,6 +113,35 @@ describe('players helpers', () => {
     expect(senior.initialPlayablePositions).toEqual(
       academy.initialPlayablePositions,
     )
+  })
+
+  it('signToSenior moves a scouted regen and clears the club note', () => {
+    const scouted = createPlayer({
+      name: 'Scout',
+      country: 'Spain',
+      naturalPosition: 'CB',
+      currentPosition: 'CB',
+      secondaryPositions: '',
+      ovr: 74,
+      potRange: '',
+      status: null,
+      source: 'Regen',
+      regenOf: 'Raul Albiol',
+      initialSM: 3,
+      currentSM: 3,
+      initialWF: 4,
+      currentWF: 4,
+      initialWorkRate: 'L/H',
+      currentWorkRate: 'L/H',
+      squadLocation: 'external',
+      notes: 'FC Barcelona',
+    })
+    const signed = signToSenior(scouted)
+    expect(signed.squadLocation).toBe('senior')
+    expect(signed.status).toBeNull()
+    expect(signed.notes).toBe('')
+    expect(signed.regenOf).toBe('Raul Albiol')
+    expect(signed.initialSM).toBe(3)
   })
 
   it('sellPlayer moves to external with club and fee', () => {
@@ -276,6 +309,19 @@ describe('storage', () => {
     expect(loaded.filter((p) => p.squadLocation === 'senior').length).toBe(
       base.length + addons.length,
     )
+  })
+})
+
+describe('externalAddons', () => {
+  it('merges GTN scouts into Scouted with no sale fields', () => {
+    const base = createSeedPlayers().filter((p) => p.name === 'Matěj Liška')
+    const merged = mergeMissingExternalAddons(base)
+    const cruz = merged.find((p) => p.name === 'Ismael Cruz')
+    expect(cruz?.squadLocation).toBe('external')
+    expect(cruz?.destinationClub).toBeUndefined()
+    expect(cruz?.transferFee).toBeUndefined()
+    expect(cruz?.notes).toBe('FC Barcelona')
+    expect(createExternalAddonPlayers()).toHaveLength(10)
   })
 })
 

@@ -6,6 +6,7 @@ import {
   isNameReleased,
   omitReleasedPlayers,
 } from './releasedNames'
+import { mergeMissingExternalAddons } from './externalAddons'
 import { mergeMissingSeniorAddons } from './seniorAddons'
 import { applyAutoUpgradesSettled } from './upgradeStatus'
 import type { Player } from '../types/player'
@@ -107,15 +108,17 @@ export function loadPlayers(): Player[] {
       return seed
     }
     const players = ensureListOrders(
-      mergeMissingSeniorAddons(
-        mergeMissingAcademyAddons(
-          mergeMissingAcademyPlayers(
-            omitReleasedPlayers(
-              applyDataCorrections(
-                (parsed as Player[]).map((p) => ({
-                  ...p,
-                  height: typeof p.height === 'string' ? p.height : '',
-                })),
+      mergeMissingExternalAddons(
+        mergeMissingSeniorAddons(
+          mergeMissingAcademyAddons(
+            mergeMissingAcademyPlayers(
+              omitReleasedPlayers(
+                applyDataCorrections(
+                  (parsed as Player[]).map((p) => ({
+                    ...p,
+                    height: typeof p.height === 'string' ? p.height : '',
+                  })),
+                ),
               ),
             ),
           ),

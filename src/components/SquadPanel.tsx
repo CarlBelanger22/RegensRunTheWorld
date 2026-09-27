@@ -63,6 +63,16 @@ export function SquadPanel({
     [scoped, filters],
   )
 
+  const splitLoan = variant === 'senior'
+  const atClub = useMemo(
+    () => (splitLoan ? visible.filter((p) => !isOnLoan(p)) : visible),
+    [splitLoan, visible],
+  )
+  const onLoan = useMemo(
+    () => (splitLoan ? visible.filter((p) => isOnLoan(p)) : []),
+    [splitLoan, visible],
+  )
+
   const allowReorder =
     showOrderColumn && filters.sort === 'pos' && Boolean(onReplacePlayers)
 
@@ -72,8 +82,9 @@ export function SquadPanel({
 
   const handleReorder = (playerId: string, direction: 'up' | 'down') => {
     if (!onReplacePlayers) return
+    const list = onLoan.some((p) => p.id === playerId) ? onLoan : atClub
     onReplacePlayers(
-      movePlayerAmongVisiblePeers(players, visible, playerId, direction),
+      movePlayerAmongVisiblePeers(players, list, playerId, direction),
     )
   }
 
@@ -154,9 +165,12 @@ export function SquadPanel({
           <h2 className="text-base font-semibold text-ink">{title}</h2>
           <p className="text-xs text-muted">{description}</p>
           <p className="text-[10px] text-zinc-500">
-            {visible.length}/{scoped.length} · click headers to sort · use
-            Reorder to show ↑↓ for same position · hover OVR/SM/WF for + · click
-            POT to edit · left rail = settled · click row for full edit
+            {splitLoan
+              ? `${atClub.length} at club · ${onLoan.length} on loan · `
+              : `${visible.length}/${scoped.length} · `}
+            click headers to sort · use Reorder to show ↑↓ for same position ·
+            hover OVR/SM/WF for + · click POT to edit · left rail = settled ·
+            click row for full edit
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -210,25 +224,70 @@ export function SquadPanel({
         variant={variant}
       />
 
-      <PlayerTable
-        players={visible}
-        variant={variant}
-        renderActions={defaultActions}
-        onRowClick={setEditTarget}
-        onPatchPlayer={(player, patch) =>
-          onUpsertPlayer(touchPlayer(player, patch))
-        }
-        sort={filters.sort}
-        sortDir={filters.sortDir}
-        onSort={handleSort}
-        allowReorder={allowReorder}
-        onReorderPlayer={allowReorder ? handleReorder : undefined}
-        emptyMessage={
-          scoped.length === 0
-            ? 'No players in this squad yet.'
-            : 'No players match these filters.'
-        }
-      />
+      {splitLoan ? (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-xs font-semibold text-ink">At the club</h3>
+            <PlayerTable
+              players={atClub}
+              variant={variant}
+              renderActions={defaultActions}
+              onRowClick={setEditTarget}
+              onPatchPlayer={(player, patch) =>
+                onUpsertPlayer(touchPlayer(player, patch))
+              }
+              sort={filters.sort}
+              sortDir={filters.sortDir}
+              onSort={handleSort}
+              allowReorder={allowReorder}
+              onReorderPlayer={allowReorder ? handleReorder : undefined}
+              emptyMessage={
+                scoped.length === 0
+                  ? 'No players in this squad yet.'
+                  : 'No players at the club match these filters.'
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <h3 className="text-xs font-semibold text-ink">On Loan</h3>
+            <PlayerTable
+              players={onLoan}
+              variant={variant}
+              renderActions={defaultActions}
+              onRowClick={setEditTarget}
+              onPatchPlayer={(player, patch) =>
+                onUpsertPlayer(touchPlayer(player, patch))
+              }
+              sort={filters.sort}
+              sortDir={filters.sortDir}
+              onSort={handleSort}
+              allowReorder={allowReorder}
+              onReorderPlayer={allowReorder ? handleReorder : undefined}
+              emptyMessage="No players on loan."
+            />
+          </div>
+        </div>
+      ) : (
+        <PlayerTable
+          players={visible}
+          variant={variant}
+          renderActions={defaultActions}
+          onRowClick={setEditTarget}
+          onPatchPlayer={(player, patch) =>
+            onUpsertPlayer(touchPlayer(player, patch))
+          }
+          sort={filters.sort}
+          sortDir={filters.sortDir}
+          onSort={handleSort}
+          allowReorder={allowReorder}
+          onReorderPlayer={allowReorder ? handleReorder : undefined}
+          emptyMessage={
+            scoped.length === 0
+              ? 'No players in this squad yet.'
+              : 'No players match these filters.'
+          }
+        />
+      )}
 
       <Modal
         title={addLabel}
