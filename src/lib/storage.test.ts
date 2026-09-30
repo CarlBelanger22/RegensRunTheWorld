@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createPlayer, promoteToSenior, signToSenior, sellPlayer, loanPlayer, recallPlayer, correctFrozenBaseline, touchPlayer } from './players'
+import { createPlayer, promoteToSenior, signToSenior, sellPlayer, loanPlayer, recallPlayer, correctFrozenBaseline, touchPlayer, sourceAfterRegenOf } from './players'
 import { createSeedPlayers } from './seed'
 import {
   createAcademyAddonPlayers,
@@ -85,6 +85,13 @@ describe('players helpers', () => {
     expect(corrected.initialPlayablePositions).toEqual(['RW', 'CF', 'ST'])
     expect(corrected.initialSM).toBe(3)
     expect(corrected.currentSM).toBe(4)
+  })
+
+  it('sourceAfterRegenOf flips Unknown to Regen when a name is set', () => {
+    expect(sourceAfterRegenOf('Unknown', 'Daniel Wass')).toBe('Regen')
+    expect(sourceAfterRegenOf('Unknown', '   ')).toBe('Unknown')
+    expect(sourceAfterRegenOf('Academy', 'Daniel Wass')).toBe('Academy')
+    expect(sourceAfterRegenOf('Regen', '')).toBe('Regen')
   })
 
   it('promoteToSenior leaves status unset and keeps potRange', () => {
@@ -321,7 +328,7 @@ describe('externalAddons', () => {
     expect(cruz?.destinationClub).toBeUndefined()
     expect(cruz?.transferFee).toBeUndefined()
     expect(cruz?.notes).toBe('FC Barcelona')
-    expect(createExternalAddonPlayers()).toHaveLength(10)
+    expect(createExternalAddonPlayers()).toHaveLength(14)
   })
 })
 
@@ -361,6 +368,14 @@ describe('academyAddons', () => {
         'Edward Kirk',
         'Massimo Monti',
         'Paolo Longo',
+        'Seth Thompson',
+        'Emil Brandt',
+        'Gaspard Michaud',
+        'Valentin Paul',
+        'Jordan Williams',
+        'Baptiste Langlois',
+        'Fritz Kuhn',
+        'Dominic Vogel',
       ]),
     )
     expect(

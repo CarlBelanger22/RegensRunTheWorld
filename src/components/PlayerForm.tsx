@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { createPlayer } from '../lib/players'
+import { createPlayer, sourceAfterRegenOf } from '../lib/players'
 import { ensureSecondaryIncludesCurrent } from '../lib/positions'
 import { parsePotRange } from '../lib/potRange'
 import {
@@ -162,7 +162,7 @@ export function PlayerForm({ mode, onSubmit, onCancel }: PlayerFormProps) {
       height: form.height.trim(),
       potRange: potRange || '',
       status: isAcademy ? null : (form.status as PlayerStatus),
-      source: form.source,
+      source: sourceAfterRegenOf(form.source, form.regenOf),
       regenOf: form.regenOf.trim() || undefined,
       initialSM: sm,
       currentSM: sm,
@@ -320,7 +320,13 @@ export function PlayerForm({ mode, onSubmit, onCancel }: PlayerFormProps) {
           <input
             className={fieldClass}
             value={form.regenOf}
-            onChange={(e) => patch({ regenOf: e.target.value })}
+            onChange={(e) => {
+              const regenOf = e.target.value
+              patch({
+                regenOf,
+                source: sourceAfterRegenOf(form.source, regenOf),
+              })
+            }}
             placeholder="Retired player name"
           />
         </label>

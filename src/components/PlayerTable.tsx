@@ -425,15 +425,17 @@ export function PlayerTable({
               <td className={`${td} font-semibold`}>
                 {quick ? (
                   <IncrementCell
-                    display={String(player.ovr)}
-                    canIncrement={player.ovr < 99}
+                    display={player.ovr < 1 ? '?' : String(player.ovr)}
+                    canIncrement={player.ovr >= 1 && player.ovr < 99}
                     label="OVR"
                     onIncrement={() =>
                       onPatchPlayer?.(player, { ovr: bumpOvr(player.ovr) })
                     }
                   />
                 ) : (
-                  <span className="tabular-nums text-ink">{player.ovr}</span>
+                  <span className="tabular-nums text-ink">
+                    {player.ovr < 1 ? '?' : player.ovr}
+                  </span>
                 )}
               </td>
               {showPotRange ? (

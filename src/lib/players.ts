@@ -98,6 +98,18 @@ export function correctFrozenBaseline(
   }
 }
 
+/**
+ * A regen name means the source is no longer unknown.
+ * Academy stays Academy.
+ */
+export function sourceAfterRegenOf(
+  source: PlayerSource,
+  regenOf: string,
+): PlayerSource {
+  if (regenOf.trim() && source === 'Unknown') return 'Regen'
+  return source
+}
+
 export function promoteToSenior(player: Player): Player {
   return touchPlayer(player, {
     squadLocation: 'senior' satisfies SquadLocation,

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Pencil } from 'lucide-react'
 import { Modal } from './Modal'
 import { UpgradeBadges } from './UpgradeBadges'
-import { correctFrozenBaseline, touchPlayer } from '../lib/players'
+import { correctFrozenBaseline, sourceAfterRegenOf, touchPlayer } from '../lib/players'
 import {
   buildInitialPlayablePositions,
   ensureSecondaryIncludesCurrent,
@@ -103,7 +103,7 @@ function previewPlayer(base: Player, form: EditFormState): Player {
         : form.status === ''
           ? null
           : (form.status as PlayerStatus),
-    source: form.source,
+    source: sourceAfterRegenOf(form.source, form.regenOf),
     regenOf: form.regenOf.trim() || undefined,
     currentSM: clampStar(Number(form.currentSM)),
     currentWF: clampStar(Number(form.currentWF)),
@@ -267,7 +267,7 @@ function EditPlayerModalInner({
           : form.status === ''
             ? null
             : (form.status as PlayerStatus),
-        source: form.source,
+        source: sourceAfterRegenOf(form.source, form.regenOf),
         regenOf: form.regenOf.trim() || undefined,
         currentSM: clampStar(Number(form.currentSM)),
         currentWF: clampStar(Number(form.currentWF)),
@@ -540,7 +540,13 @@ function EditPlayerModalInner({
             <input
               className={fieldClass}
               value={form.regenOf}
-              onChange={(e) => patch({ regenOf: e.target.value })}
+              onChange={(e) => {
+              const regenOf = e.target.value
+              patch({
+                regenOf,
+                source: sourceAfterRegenOf(form.source, regenOf),
+              })
+            }}
             />
           </label>
 
